@@ -16,22 +16,22 @@ console.error("TRELLO_DAYS_BACK is " + process.env.TRELLO_DAYS_BACK );
 var trello = new Trello(process.env.TRELLO_ID, process.env.TRELLO_TOKEN);
 
 function makeRequest(fn, uri, options) {
-        return new Promise(function(resolve, reject) {
-            fn(uri, options)
-                .once('complete', function (result) {
-                    if (result instanceof Error) {
-                        reject(result);
-                    } else {
-                        resolve(result);
-                    }
-                });
-        });
+  return new Promise(function(resolve, reject) {
+    fn(uri, options)
+    .once('complete', function (result) {
+      if (result instanceof Error) {
+        reject(result);
+      } else {
+        resolve(result);
+      }
+    });
+  });
 }
 
 function findCorrectBoard(boards, boardName) {
-    return _.find(boards, function(board) {
-        return board.name == boardName;
-    });
+  return _.find(boards, function(board) {
+    return board.name == boardName;
+  });
 }
 
 function getAllCardsForBoard(board) {
@@ -82,56 +82,56 @@ function processCards(cards, days_back) {
   console.log("\"Cycle Time\",\"Estimate\",\"Card Name\"");
   var histogram = new Object();
 
-    _.each(cards, (card) => { 
-       if (lastWorkingAction(card.actions) === undefined || lastCompleteAction(card.actions) === undefined) {
-         console.error( "Skipping unfinished card " + card.name + ", " + card.shortUrl );
-         return;
-       }
-       if ( moment().subtract(days_back, 'days').isAfter(startingTimestamp(card.actions) ) ) {
-         console.error( "Skipping old card " + card.name + ", " + card.shortUrl );
-         return;
-       }
+  _.each(cards, (card) => { 
+    if (lastWorkingAction(card.actions) === undefined || lastCompleteAction(card.actions) === undefined) {
+      console.error( "Skipping unfinished card " + card.name + ", " + card.shortUrl );
+      return;
+    }
+    if ( moment().subtract(days_back, 'days').isAfter(startingTimestamp(card.actions) ) ) {
+      console.error( "Skipping old card " + card.name + ", " + card.shortUrl );
+      return;
+    }
 
-       var cycleTime = elapsedTime(startingTimestamp(card.actions), endTimestamp(card.actions));
-       var estimate = getEstimate(card);
+    var cycleTime = elapsedTime(startingTimestamp(card.actions), endTimestamp(card.actions));
+    var estimate = getEstimate(card);
 
-       if(estimate != 9999) {
-         console.log(cycleTime + "," + estimate + ",\"" + card.name + "\"");
-       } else {
-         errorLog.push(cycleTime + " days, estimate: " + estimate + " - \"" + card.name + "\"");
-       }
+    if(estimate != 9999) {
+      console.log(cycleTime + "," + estimate + ",\"" + card.name + "\"");
+    } else {
+      errorLog.push(cycleTime + " days, estimate: " + estimate + " - \"" + card.name + "\"");
+    }
 
-      if (! histogram[estimate]) {
-        histogram[estimate] = new Array();
-        histogram[estimate]["count"] = 0;
-        histogram[estimate]["total"] = 0;
-      }
+    if (! histogram[estimate]) {
+      histogram[estimate] = new Array();
+      histogram[estimate]["count"] = 0;
+      histogram[estimate]["total"] = 0;
+    }
 
-      if ( histogram[estimate][cycleTime] )
-        histogram[estimate][cycleTime] += 1;
-      else
-        histogram[estimate][cycleTime] = 1;
+    if ( histogram[estimate][cycleTime] )
+      histogram[estimate][cycleTime] += 1;
+    else
+      histogram[estimate][cycleTime] = 1;
 
-      histogram[estimate]["total"] += cycleTime;
-      histogram[estimate]["count"] += 1;
+    histogram[estimate]["total"] += cycleTime;
+    histogram[estimate]["count"] += 1;
 
-    });
+  });
 
-    console.log( "\n\"Estimate\",\"Occurences by Day\"" );
-    _.each(histogram, (value, key) => {
-      console.log(key + "," + value);
-    });
+  console.log( "\n\"Estimate\",\"Occurences by Day\"" );
+  _.each(histogram, (value, key) => {
+    console.log(key + "," + value);
+  });
 
-    console.log( "\n\"Estimate\",\"Average Days\"" );
-    _.each(histogram, (value, key) => {
-      console.log(key + "," + histogram[key]["total"] / histogram[key]["count"] );
-    });
+  console.log( "\n\"Estimate\",\"Average Days\"" );
+  _.each(histogram, (value, key) => {
+    console.log(key + "," + histogram[key]["total"] / histogram[key]["count"] );
+  });
 
   _.each(errorLog, (error) => { console.error(error); });
 }
 
 trello.getBoards(memberId)
-    .then((boards) => { return findCorrectBoard(boards, process.env.TRELLO_BOARD); })
-    .then((board) => { return getAllCardsForBoard(board); })
-    .then((cards) => { processCards(cards, process.env.TRELLO_DAYS_BACK); })
-    .then(null, (error) => { console.log("error:" + error); });
+  .then((boards) => { return findCorrectBoard(boards, process.env.TRELLO_BOARD); })
+  .then((board) => { return getAllCardsForBoard(board); })
+  .then((cards) => { processCards(cards, process.env.TRELLO_DAYS_BACK); })
+  .then(null, (error) => { console.log("error:" + error); });
